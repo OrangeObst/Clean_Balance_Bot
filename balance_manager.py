@@ -76,7 +76,7 @@ class Speed_Calculator(object):
 
 		accel_readings = np.array([self.mpu.MPU_ReadData() for _ in range(10)])
 		accel_avg = np.mean(accel_readings, axis=0)
-		self.initial_pitch = math.degrees(math.atan2(accel_avg[0], math.sqrt(accel_avg[1]**2 + accel_avg[2]**2)))
+		self.initial_pitch = math.degrees(math.atan2(-accel_avg[0], math.sqrt(accel_avg[1]**2 + accel_avg[2]**2)))
 		self.previous_error = self.balance_point - self.initial_pitch
 		self.previous_pitch = self.initial_pitch
 

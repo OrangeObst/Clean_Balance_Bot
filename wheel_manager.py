@@ -42,7 +42,7 @@ class Wheel_Manager(object):
 	def set_speed(self, speed):
 		with self.lock:
 			speed = max(-100, min(100, speed))
-			if speed >= 0:
+			if speed <= 0:
 				self.motor.backward()
 			else:
 				self.motor.forward()

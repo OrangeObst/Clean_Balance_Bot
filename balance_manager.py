@@ -20,8 +20,8 @@ class LowPassFilter:
 
 
 class Speed_Calculator(object):
-	# 			(		P, I, D, 	target_angle, min_out, 		max_out, 	scaling_factor, 	angle_offset)
-	def __init__(self, kp, ki, kd, targetAngle=0, min_out=-100, max_out=100, scaling_factor=1, angle_offset=0):
+	# 			(		P, I, D,  min_out, 		max_out, 	 	balance_point)
+	def __init__(self, kp, ki, kd, min_out=-100, max_out=100, balance_point=0):
 		self.timer = Timer("test", text="Control loop: {milliseconds:.6f} ms")
 		self.timer2 = Timer("test2", text="Control loop2: {milliseconds:.6f} ms")
 		self.timer3 = Timer("test3", text="Control loop3: {milliseconds:.6f} ms")
@@ -31,17 +31,14 @@ class Speed_Calculator(object):
 		'''
 		--------------- PID values ---------------
 		'''
-
-		self.kp = kp * scaling_factor
-		self.ki = ki * scaling_factor
-		self.kd = kd * scaling_factor
+		self.kp = kp
+		self.ki = ki
+		self.kd = kd
 
 		self.error = 0
 		self.previous_error = 0
 		self.sum_error = 0
 		self.last_time = time.perf_counter()
-		
-		self.setpoint = targetAngle
 		
 		self.min_out = min_out
 		self.max_out = max_out
@@ -69,10 +66,9 @@ class Speed_Calculator(object):
 		self.lpf_z = LowPassFilter(lpf_alpha)
 
 		accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z = self.mpu.MPU_ReadData()
-
-		self.gyro = 0
 		
-		self.angle_offset = angle_offset
+		self.pitch_offset = 0.9
+		self.balance_point = balance_point
 		
 		self.imu_data = manager.list()
 		
@@ -81,7 +77,7 @@ class Speed_Calculator(object):
 		accel_readings = np.array([self.mpu.MPU_ReadData() for _ in range(10)])
 		accel_avg = np.mean(accel_readings, axis=0)
 		self.initial_pitch = math.degrees(math.atan2(accel_avg[0], math.sqrt(accel_avg[1]**2 + accel_avg[2]**2)))
-		
+		self.previous_error = self.balance_point - self.initial_pitch
 		self.previous_pitch = self.initial_pitch
 
 
@@ -102,29 +98,27 @@ class Speed_Calculator(object):
 		accel_y = self.lpf_y.filter(accel_y)
 		accel_z = self.lpf_z.filter(accel_z)
 
-		self.gyro = gyro_y * dt
-		# print(self.gyro)
-
 		# Pitch stablefrom accelerometer
-		pitch_from_acceleration = math.degrees(math.atan2(accel_x, math.sqrt(accel_y**2 + accel_z**2)))
+		pitch_from_acceleration = math.degrees(math.atan2(-accel_x, math.sqrt(accel_y**2 + accel_z**2)))
+		# pitch_from_acceleration = math.degrees(math.atan2(accel_x,accel_z))
 		
 		# Integrate gyro data to get pitch change
-		pitch_gyro_integration = self.previous_pitch + self.gyro
-		# print(f'Pitch from acc: {pitch_from_acceleration}, Pitch from gyro: {pitch_gyro_integration}')
+		pitch_gyro_integration = self.previous_pitch + gyro_y * dt
+		print(f'Pitch from acc: {pitch_from_acceleration}, Pitch from gyro: {pitch_gyro_integration}')
 		
 		# Apply complementary filter
 		pitch = self.alpha * pitch_gyro_integration + (1 - self.alpha) * pitch_from_acceleration
-		corrected_pitch = pitch - self.angle_offset
-		# print(f'Pitch: {pitch} - Corrected pitch: {corrected_pitch}')
+		current_angle = pitch - self.pitch_offset
+		# print(f'Pitch: {pitch} - Corrected pitch: {current_angle}')
 
-		self.imu_data.append(corrected_pitch)
+		self.imu_data.append(current_angle)
 		self.previous_pitch = pitch
 		# self.timer4.stop()
 		'''
 		--------------- Update PID controls ---------------
 		'''
 		# self.timer5.start()
-		self.error = self.setpoint - corrected_pitch
+		self.error = self.balance_point - current_angle
 		self.sum_error += self.error * dt
 
 		pterm = self.kp * self.error
@@ -136,8 +130,8 @@ class Speed_Calculator(object):
 		output = pterm + iterm + dterm
 
 		output = max(self.min_out, min(self.max_out, output))
-		print(f'Error: {self.error} = setpoint {self.setpoint} - corr pitch {corrected_pitch}')
-		print(f'pterm: {pterm}, iterm {iterm} dterm {dterm} output {output}')
+		print(f'Error: {self.error} = balance_point {self.balance_point} - corr pitch {current_angle}')
+		# print(f'pterm: {pterm}, iterm {iterm} dterm {dterm} output {output}')
 		self.previous_error = self.error
 
 		self.pid_data.append(output)

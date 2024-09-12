@@ -49,9 +49,9 @@ class MyMPU6050:
         self.ACCEL_SCALE = 16384.0
         self.GYRO_SCALE = 131.0
 
-        self.AX_OFFSET = 0.05761957023987742
-        self.AY_OFFSET = 0.07825717321030708
-        self.AZ_OFFSET = 3.58622674200753
+        self.AX_OFFSET = 0.01794563013869716
+        self.AY_OFFSET = 0.029036013730165736
+        self.AZ_OFFSET = 1.0536809100992905
 
         self.GYRO_DRIFT_X = -0.0001191070
         self.GYRO_DRIFT_Y = -0.0000127492
@@ -317,7 +317,6 @@ class MyMPU6050:
     def get_accel_offset(self):
         return AX_OFFSET, AY_OFFSET, AZ_OFFSET
 
-
 def _convert_to_signed(value):
     if value > 32768:
         value -= 65536
@@ -339,8 +338,8 @@ if __name__ == "__main__":
     mpu.set_dlpf_cfg(2)
     mpu.set_smplrt_div(4)
     print("Calibrating sensor, do not move the system")
-    # mpu.calibrate_sensor()
-    mpu.calculate_gyro_drift()
+    mpu.calibrate_sensor()
+    # mpu.calculate_gyro_drift()
     # print(mpu.GYRO_DRIFT_X, mpu.GYRO_DRIFT_Y, mpu.GYRO_DRIFT_Z)
     # timer = time.time()
     # while ((time.time() - timer) < 10):

@@ -127,8 +127,8 @@ def motor_control(wm : wheel_manager, conn):
 	PWM_B = 5
 '''
 if __name__ == "__main__":
-	# (P, I, D, target_angle, min_out, max_out, scaling_factor, angle_offset) 0.83
-	bm = balance_manager.Speed_Calculator(40, 0.3, 1.2, 0.9, -100, 100, 1, 0.0)
+	# (P, I, D, target_angle, min_out, max_out, balance_point) 0.83
+	bm = balance_manager.Speed_Calculator(32, 0.3, 0.5, -100, 100, -0.9)
 
 	use_wheels = False
 	if use_wheels:
@@ -179,6 +179,6 @@ if __name__ == "__main__":
 		right_motor_process.join()
 		left_motor_process.join()
 
-	# stackplot_pid_values(bm)
-	# plot_angle_speed(bm)
-	plot_all_in_one(bm)
+	stackplot_pid_values(bm)
+	plot_angle_speed(bm)
+	# plot_all_in_one(bm)

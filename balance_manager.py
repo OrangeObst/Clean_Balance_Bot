@@ -61,8 +61,6 @@ class Speed_Calculator(object):
 		self.lpf_y = LowPassFilter(lpf_alpha)
 		self.lpf_z = LowPassFilter(lpf_alpha)
 
-
-		self.pitch_offset = 0.9
 		self.balance_point = balance_point
 		
 		self.imu_data = manager.list()
@@ -73,7 +71,6 @@ class Speed_Calculator(object):
 		accel_readings = np.array([self.mpu.MPU_ReadData() for _ in range(10)])
 		accel_avg = np.mean(accel_readings, axis=0)
 		self.initial_pitch = math.degrees(math.atan2(-accel_avg[0], math.sqrt(accel_avg[1]**2 + accel_avg[2]**2)))
-		# self.initial_pitch = self.initial_pitch - self.pitch_offset
 		
 		self.previous_error = self.balance_point - self.initial_pitch
 		self.previous_pitch = self.initial_pitch
@@ -104,7 +101,7 @@ class Speed_Calculator(object):
 		
 		# Apply complementary filter
 		pitch = self.alpha * pitch_gyro_integration + (1 - self.alpha) * pitch_from_acceleration
-		current_angle = pitch - self.pitch_offset
+		current_angle = pitch
 		# print(f'Pitch: {pitch} - Corrected pitch: {current_angle}')
 
 		self.imu_data.append(current_angle)

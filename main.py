@@ -126,9 +126,9 @@ def motor_control(wm : wheel_manager, conn):
 '''
 if __name__ == "__main__":
 	# (P, I, D, target_angle, min_out, max_out, balance_point) 0.83
-	bm = balance_manager.Speed_Calculator(27, 0.3, 0.60, -100, 100, -1.45)
+	bm = balance_manager.Speed_Calculator(32, 0.4, 0.45, -100, 100, -0.5)
 
-	use_wheels = False
+	use_wheels = True
 	if use_wheels:
 		right_wheel = wheel_manager.Wheel_Manager(17, 4)
 		left_wheel = wheel_manager.Wheel_Manager(27, 5)

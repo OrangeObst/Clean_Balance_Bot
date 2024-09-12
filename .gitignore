@@ -1,0 +1,12 @@
+*.txt
+*.png
+*.cfg
+.vscode/
+__pycache__/
+bin/
+include/
+lib/
+share/
+SunFounder_PCA9685/
+SunFounder_TB6612/
+lib64

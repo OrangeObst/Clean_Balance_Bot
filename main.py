@@ -1,0 +1,184 @@
+import time
+import matplotlib.pyplot as plt
+import numpy as np
+from codetiming import Timer
+from multiprocessing import Process, Pipe, Manager
+import balance_manager
+import wheel_manager
+
+def stackplot_pid_values(bm : balance_manager):
+	fig, left_ax = plt.subplots(figsize = (10, 10))
+	
+	p_values = len(bm.pterms)
+	i_values = len(bm.iterms)
+	d_values = len(bm.dterms)
+
+    # Need size of smallest dataset to be able to plot properly
+	smaller_value = min(p_values, i_values, d_values)
+	print(f'Datapoints: {smaller_value}')
+	time_values = np.linspace(0, 10, smaller_value)
+
+	left_ax.set_xlim(0, 10)
+	left_ax.set_ylim(-100, 100)
+	
+	y = np.vstack([bm.pterms, bm.iterms, bm.dterms])
+	left_ax.stackplot(time_values, y)
+
+	#plt.show()
+	plt.savefig('stackplot.png')
+
+def plot_angle_speed(bm : balance_manager):
+	fig, left_ax = plt.subplots(figsize = (10, 10))
+	right_ax = left_ax.twinx()
+
+	time_values = np.linspace(0, 10, len(bm.imu_data))
+
+	p1, = left_ax.plot(time_values, bm.imu_data, "b-")
+	p2, = right_ax.plot(time_values, bm.pid_data, "r-")
+
+	left_ax.set_xlim(0, 10)
+	left_ax.set_ylim(-5, 5)
+	right_ax.set_ylim(-110, 110)
+
+	left_ax.set_xlabel('Time (s)')
+	left_ax.set_ylabel('Angle (°)')
+	right_ax.set_ylabel('Speed')
+
+	left_ax.yaxis.label.set_color(p1.get_color())
+	right_ax.yaxis.label.set_color(p2.get_color())
+
+	#plt.show()
+	plt.savefig('speedplot.png')
+
+def plot_all_in_one(bm : balance_manager):
+	fig, left_ax = plt.subplots(figsize = (10, 10))
+	right_ax = left_ax.twinx()
+
+	p_values = len(bm.pterms)
+	i_values = len(bm.iterms)
+	d_values = len(bm.dterms)
+
+    # Need size of smallest dataset to be able to plot properly
+	smaller_value = min(p_values, i_values, d_values)
+	print(f'Datapoints: {smaller_value}')
+	time_values = np.linspace(0, 10, smaller_value)
+
+	left_ax.set_xlim(0, 10)
+	left_ax.set_ylim(-5, 5)
+	right_ax.set_ylim(-110, 110)
+	
+	y = np.vstack([bm.pterms, bm.iterms, bm.dterms])
+	right_ax.stackplot(time_values, y)
+	p2, = right_ax.plot(time_values, bm.pid_data, "r-")
+	p1, = left_ax.plot(time_values, bm.imu_data, "b-")
+
+	left_ax.set_ylabel('Angle (°)')
+	right_ax.set_ylabel('Speed')
+
+	left_ax.yaxis.label.set_color(p1.get_color())
+	right_ax.yaxis.label.set_color(p2.get_color())
+
+	#plt.show()
+	plt.savefig('Stats.png')
+
+
+@Timer(name="Calc Loop", text="Calc loop: {:.6f}s")
+def process_calculation(bm : balance_manager, conn_right=None, conn_left=None):
+	timer = time.time()
+	while((time.time() - timer) < 10):
+		loop_time = time.time() + 0.01
+
+		speed_value = bm.control_loop()
+
+		if conn_right is not None and conn_left is not None:
+			conn_right.send(speed_value)
+			conn_left.send(speed_value)
+
+		while(time.time() < loop_time):
+			# time.sleep(0.0001)
+			pass
+	
+	bm.mean_time()
+
+	if conn_right is not None and conn_left is not None:
+		conn_right.send('Done')
+		conn_left.send('Done')
+		conn_right.close()
+		conn_left.close()
+		
+
+
+@Timer(name="Motor Loop", text="Motor: {:.6f}s")
+def motor_control(wm : wheel_manager, conn):
+	while True:
+		speed = conn.recv()
+		if(speed == 'Done'):
+			break
+		wm.set_speed(int(speed))
+
+	conn.close()
+	wm.stop()
+
+'''
+	Motor_A = 17
+	Motor_B = 27
+
+	PWM_A = 4
+	PWM_B = 5
+'''
+if __name__ == "__main__":
+	# (P, I, D, target_angle, min_out, max_out, scaling_factor, angle_offset) 0.83
+	bm = balance_manager.Speed_Calculator(40, 0.3, 1.2, 0.9, -100, 100, 1, 0.0)
+
+	use_wheels = False
+	if use_wheels:
+		right_wheel = wheel_manager.Wheel_Manager(17, 4)
+		left_wheel = wheel_manager.Wheel_Manager(27, 5)
+	
+		parent_conn_right, child_conn_right = Pipe()
+		parent_conn_left, child_conn_left = Pipe()
+		try:
+			bm_process = Process(target=process_calculation, args=(bm, parent_conn_right, parent_conn_left))
+			right_motor_process = Process(target=motor_control, args=(right_wheel, child_conn_right))
+			left_motor_process = Process(target=motor_control, args=(left_wheel, child_conn_left))
+
+		finally:
+			right_wheel.stop()
+			left_wheel.stop()
+	else:
+		bm_process = Process(target=process_calculation, args=(bm,))
+
+	bm_process.start()
+	if use_wheels:
+		right_motor_process.start()
+		left_motor_process.start()
+
+	# timer = time.time()
+	# while((time.time() - timer) < 10):
+	# 	loop_time = time.time() + 0.01
+
+	# 	speed_value = bm.control_loop()
+
+	# 	if parent_conn_right is not None and parent_conn_left is not None:
+	# 		parent_conn_right.send(speed_value)
+	# 		parent_conn_left.send(speed_value)
+
+	# 	while(time.time() < loop_time):
+	# 		pass
+	
+	# bm.mean_time()
+
+	# if parent_conn_right is not None and parent_conn_left is not None:
+	# 	parent_conn_right.send('Done')
+	# 	parent_conn_left.send('Done')
+	# 	parent_conn_right.close()
+	# 	parent_conn_left.close()
+
+	bm_process.join()
+	if use_wheels:
+		right_motor_process.join()
+		left_motor_process.join()
+
+	# stackplot_pid_values(bm)
+	# plot_angle_speed(bm)
+	plot_all_in_one(bm)

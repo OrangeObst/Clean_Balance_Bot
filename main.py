@@ -35,6 +35,17 @@ def plot_angle_speed(bm : balance_manager):
 
 	p1, = left_ax.plot(time_values, bm.imu_data, "b-")
 	p2, = right_ax.plot(time_values, bm.pid_data, "r-")
+	left_ax.axhline(y=bm.balance_point, color='k', linestyle='--', label=f'Balancing point at {bm.balance_point}°')
+
+	# Find high and low points
+	high_point = np.max(bm.imu_data)
+	low_point = np.min(bm.pid_data)
+	high_point_index = np.argmax(bm.imu_data)
+	low_point_index = np.argmin(bm.pid_data)
+
+	# Add vertical lines at high and low points
+	left_ax.axvline(x=time_values[high_point_index], color='g', linestyle='--', label=f'High point at {high_point}°')
+	left_ax.axvline(x=time_values[low_point_index], color='m', linestyle='--', label=f'Low point at {low_point}°')
 
 	left_ax.set_xlim(0, 10)
 	left_ax.set_ylim(-5, 5)
@@ -126,7 +137,7 @@ def motor_control(wm : wheel_manager, conn):
 '''
 if __name__ == "__main__":
 	# (P, I, D, target_angle, min_out, max_out, balance_point) 0.83
-	bm = balance_manager.Speed_Calculator(32, 0.4, 0.45, -100, 100, -0.5)
+	bm = balance_manager.Speed_Calculator(40, 0.4, 0.35, -100, 100, -1.6)
 
 	use_wheels = True
 	if use_wheels:
@@ -150,27 +161,6 @@ if __name__ == "__main__":
 	if use_wheels:
 		right_motor_process.start()
 		left_motor_process.start()
-
-	# timer = time.time()
-	# while((time.time() - timer) < 10):
-	# 	loop_time = time.time() + 0.01
-
-	# 	speed_value = bm.control_loop()
-
-	# 	if parent_conn_right is not None and parent_conn_left is not None:
-	# 		parent_conn_right.send(speed_value)
-	# 		parent_conn_left.send(speed_value)
-
-	# 	while(time.time() < loop_time):
-	# 		pass
-	
-	# bm.mean_time()
-
-	# if parent_conn_right is not None and parent_conn_left is not None:
-	# 	parent_conn_right.send('Done')
-	# 	parent_conn_left.send('Done')
-	# 	parent_conn_right.close()
-	# 	parent_conn_left.close()
 
 	bm_process.join()
 	if use_wheels:

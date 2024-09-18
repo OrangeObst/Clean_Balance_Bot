@@ -46,12 +46,13 @@ class MyMPU6050:
         self.bus = i2c_bus
         self.address = address
 
-        self.ACCEL_SCALE = 16384.0
-        self.GYRO_SCALE = 131.0
+        self.AX_OFFSET = 0.015068350714199475
+        self.AY_OFFSET = 0.05349303127719331
+        self.AZ_OFFSET = 1.1235789666544356
 
-        self.AX_OFFSET = 0.01175186675845152
-        self.AY_OFFSET = 0.02241921294699229
-        self.AZ_OFFSET = 0.8515488781725171
+        self.GX_OFFSET = -0.024701844112223207
+        self.GY_OFFSET = -0.0028664954374765326
+        self.GZ_OFFSET = 0.013756262972435979
 
         self.GYRO_DRIFT_X = -0.0001191070
         self.GYRO_DRIFT_Y = -0.0000127492
@@ -136,13 +137,14 @@ class MyMPU6050:
         raw_gyro_y = _convert_to_signed((all_data[10] << 8) | all_data[11])
         raw_gyro_z = _convert_to_signed((all_data[12] << 8) | all_data[13])
 
+        raw_gyro_x -= self.GX_OFFSET
+        raw_gyro_y -= self.GY_OFFSET
+        raw_gyro_z -= self.GZ_OFFSET
+
         return raw_accel_x, raw_accel_y, raw_accel_z, raw_gyro_x, raw_gyro_y, raw_gyro_z
 
     # @Timer(name="MPU ReadData", text="MPU ReadData: {milliseconds:.6f}ms")
     def MPU_ReadData(self):
-        self.ACCEL_SCALE
-        self.GYRO_SCALE
-
         accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z = self.get_all_data()
 
         accel_x = (accel_x / self.ACCEL_SCALE) * STANDARD_GRAVITY
@@ -152,15 +154,6 @@ class MyMPU6050:
         gyro_x /= self.GYRO_SCALE
         gyro_y /= self.GYRO_SCALE
         gyro_z /= self.GYRO_SCALE
-        # print(f'raw x: {gyro_x:.6f}, y: {gyro_y:.6f}, z: {gyro_z:.6f}')
-        # gyro_x = math.radians(gyro_x / self.GYRO_SCALE)
-        # gyro_y = math.radians(gyro_y / self.GYRO_SCALE)
-        # gyro_z = math.radians(gyro_z / self.GYRO_SCALE)
-        # print(f'rad x: {gyro_x:.6f}, y: {gyro_y:.6f}, z: {gyro_z:.6f}')
-        # gyro_x = math.degrees(math.radians(gyro_x / self.GYRO_SCALE))
-        # gyro_y = math.degrees(math.radians(gyro_y / self.GYRO_SCALE))
-        # gyro_z = math.degrees(math.radians(gyro_z / self.GYRO_SCALE))
-        # print(f'rad x: {gyro_x:.6f}, y: {gyro_y:.6f}, z: {gyro_z:.6f}')
 
         return accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z
 
@@ -179,6 +172,9 @@ class MyMPU6050:
         self.AX_OFFSET = 0.0
         self.AY_OFFSET = 0.0
         self.AZ_OFFSET = 0.0
+        self.GX_OFFSET = 0.0
+        self.GY_OFFSET = 0.0
+        self.GZ_OFFSET = 0.0
 
         counter = 0
         
@@ -191,15 +187,23 @@ class MyMPU6050:
             self.AX_OFFSET += accel_x
             self.AY_OFFSET += accel_y
             self.AZ_OFFSET += accel_z
+            self.GX_OFFSET += gyro_x
+            self.GY_OFFSET += gyro_y
+            self.GZ_OFFSET += gyro_z
 
-            print (f'Counter: {counter}')
+            if (counter % 100) == 0:
+                print (f'Counter: {counter}')
 
-        self.AX_OFFSET = self.AX_OFFSET/counter
-        self.AY_OFFSET = self.AY_OFFSET/counter
-        self.AZ_OFFSET = self.AZ_OFFSET/counter
+        self.AX_OFFSET /= counter
+        self.AY_OFFSET /= counter
+        self.AZ_OFFSET /= counter
+        self.GX_OFFSET /= counter
+        self.GY_OFFSET /= counter
+        self.GZ_OFFSET /= counter
         
         print("Setting offsets to: ")
         print(f'OFFSET AX {self.AX_OFFSET}, AY {self.AY_OFFSET}, AZ {self.AZ_OFFSET}')
+        print(f'OFFSET GX {self.GX_OFFSET}, GY {self.GY_OFFSET}, GZ {self.GZ_OFFSET}')
 
     def calculate_gyro_drift(self):
         self.GYRO_DRIFT_X = 0.0
@@ -303,19 +307,26 @@ class MyMPU6050:
         return value
 
     def set_accel_offset(self, ax_offset=None, ay_offset=None, az_offset=None):
-        self.AX_OFFSET = 0.0
-        self.AY_OFFSET = 0.0
-        self.AZ_OFFSET = 0.0
-
         if ax_offset is not None:
-            AX_OFFSET = ax_offset
+            self.AX_OFFSET = ax_offset
         if ay_offset is not None:
-            AY_OFFSET = ay_offset
+            self.AY_OFFSET = ay_offset
         if ay_offset is not None:
-            AZ_OFFSET = az_offset
+            self.AZ_OFFSET = az_offset
 
     def get_accel_offset(self):
         return AX_OFFSET, AY_OFFSET, AZ_OFFSET
+
+    def set_gyro_offset(self, gx_offset=None, gy_offset=None, gz_offset=None):
+        if ax_offset is not None:
+            self.GX_OFFSET = gx_offset
+        if ay_offset is not None:
+            self.GY_OFFSET = gy_offset
+        if ay_offset is not None:
+            self.GZ_OFFSET = gz_offset
+
+    def get_gyro_offset(self):
+        return GX_OFFSET, GY_OFFSET, GZ_OFFSET
 
 def _convert_to_signed(value):
     if value > 32768:

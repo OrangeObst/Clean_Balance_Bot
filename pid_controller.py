@@ -33,6 +33,3 @@ class PID_Controller(object):
 
         # pterm, iterm und dterm sind nur zum plotten
         return output, pterm, iterm, dterm
-
-    def get_pid_values(self):
-        return self.pterms, self.iterms, self.dterms

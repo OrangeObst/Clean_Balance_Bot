@@ -139,7 +139,7 @@ if __name__ == "__main__":
 	# (P, I, D, target_angle, min_out, max_out, balance_point) 0.83
 	bm = balance_manager.Speed_Calculator(30, 0.4, 0.35, -100, 100, -1.6)
 
-	use_wheels = True
+	use_wheels = False
 	if use_wheels:
 		right_wheel = wheel_manager.Wheel_Manager(17, 4)
 		left_wheel = wheel_manager.Wheel_Manager(27, 5)

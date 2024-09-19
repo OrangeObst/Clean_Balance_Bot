@@ -28,7 +28,6 @@ class Speed_Calculator(object):
         '''
         -------------------- PID init --------------------
         '''
-        
         self.balance_point = balance_point
         self.pid = PID_Controller(kp, ki, kd, min_out, max_out)
 
@@ -49,7 +48,7 @@ class Speed_Calculator(object):
         self.mpu.set_smplrt_div(4)
 
         # Low pass filter
-        lpf_alpha = 0.1		# For low pass filter
+        lpf_alpha = 0.1
         self.lpf_x = LowPassFilter(lpf_alpha)
         self.lpf_y = LowPassFilter(lpf_alpha)
         self.lpf_z = LowPassFilter(lpf_alpha)
@@ -106,6 +105,3 @@ class Speed_Calculator(object):
         self.dterms.append(dterm)
 
         return speed
-
-    def get_pid_values(self):
-        return self.pid.get_pid_values()

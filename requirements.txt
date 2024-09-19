@@ -1,0 +1,5 @@
+codetiming==1.4.0
+gpiozero==2.0.1
+matplotlib==3.9.2
+paho-mqtt==2.1.0
+smbus2==0.4.3

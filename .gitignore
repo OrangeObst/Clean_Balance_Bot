@@ -1,4 +1,3 @@
-*.txt
 *.png
 *.cfg
 .vscode/
@@ -10,3 +9,4 @@ share/
 SunFounder_PCA9685/
 SunFounder_TB6612/
 lib64
+.gitignore

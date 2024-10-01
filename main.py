@@ -21,11 +21,42 @@ def stackplot_pid_values(bm : balance_manager):
 	left_ax.set_xlim(0, 10)
 	left_ax.set_ylim(-100, 100)
 	
+	color_map = ["#0000FF", "#00FF00", "#FF0000"]
 	y = np.vstack([bm.pterms, bm.iterms, bm.dterms])
-	left_ax.stackplot(time_values, y)
+	left_ax.stackplot(time_values, y, colors = color_map)
 
 	#plt.show()
 	plt.savefig('stackplot.png')
+
+def subplot_p_i_d_values(bm : balance_manager):
+	fig, axs = plt.subplots(3, figsize = (10, 10))
+	
+	p_values = len(bm.pterms)
+	d_values = len(bm.dterms)
+
+    # Need size of smallest dataset to be able to plot properly
+	smaller_value = min(p_values, d_values)
+	print(f'Datapoints: {smaller_value}')
+	time_values = np.linspace(0, 10, smaller_value)
+
+	axs[0].set_xlim(0, 10)
+	axs[0].set_ylim(-100, 100)
+	axs[1].set_xlim(0, 10)
+	axs[1].set_ylim(-100, 100)
+	axs[2].set_xlim(0, 10)
+	axs[2].set_ylim(-100, 100)
+	
+	p = np.vstack([bm.pterms])
+	i = np.vstack([bm.iterms])
+	d = np.vstack([bm.dterms])
+	axs[0].stackplot(time_values, p)
+	axs[0].set_title('Proportional')
+	axs[1].stackplot(time_values, i)
+	axs[1].set_title('Integral')
+	axs[2].stackplot(time_values, d)
+	axs[2].set_title('Derivativ')
+	#plt.show()
+	plt.savefig('subplot.png')
 
 def plot_angle_speed(bm : balance_manager):
 	fig, left_ax = plt.subplots(figsize = (10, 10))
@@ -96,7 +127,7 @@ def plot_all_in_one(bm : balance_manager):
 @Timer(name="Calc Loop", text="Calc loop: {:.6f}s")
 def process_calculation(bm : balance_manager, conn_right=None, conn_left=None):
 	timer = time.time()
-	while((time.time() - timer) < 10):
+	while((time.time() - timer) < 5):
 		loop_time = time.time() + 0.01
 
 		speed_value = bm.control_loop()
@@ -137,9 +168,9 @@ def motor_control(wm : wheel_manager, conn):
 '''
 if __name__ == "__main__":
 	# (P, I, D, target_angle, min_out, max_out, balance_point) 0.83
-	bm = balance_manager.Speed_Calculator(30, 0.4, 0.35, -100, 100, -1.6)
+	bm = balance_manager.Speed_Calculator(35, 0.4, 0.8, -100, 100, -1.45)
 
-	use_wheels = False
+	use_wheels = True
 	if use_wheels:
 		right_wheel = wheel_manager.Wheel_Manager(17, 4)
 		left_wheel = wheel_manager.Wheel_Manager(27, 5)
@@ -167,6 +198,7 @@ if __name__ == "__main__":
 		right_motor_process.join()
 		left_motor_process.join()
 
+	subplot_p_i_d_values(bm)
 	stackplot_pid_values(bm)
 	plot_angle_speed(bm)
 	# plot_all_in_one(bm)

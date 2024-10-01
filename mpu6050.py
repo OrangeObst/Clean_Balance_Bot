@@ -315,7 +315,7 @@ class MyMPU6050:
             self.AZ_OFFSET = az_offset
 
     def get_accel_offset(self):
-        return AX_OFFSET, AY_OFFSET, AZ_OFFSET
+        return self.AX_OFFSET, self.AY_OFFSET, self.AZ_OFFSET
 
     def set_gyro_offset(self, gx_offset=None, gy_offset=None, gz_offset=None):
         if ax_offset is not None:
@@ -349,9 +349,9 @@ if __name__ == "__main__":
     mpu.set_dlpf_cfg(2)
     mpu.set_smplrt_div(4)
     print("Calibrating sensor, do not move the system")
-    mpu.calibrate_sensor()
+    # mpu.calibrate_sensor()
     # mpu.calculate_gyro_drift()
     # print(mpu.GYRO_DRIFT_X, mpu.GYRO_DRIFT_Y, mpu.GYRO_DRIFT_Z)
-    # timer = time.time()
-    # while ((time.time() - timer) < 10):
-    #     mpu.MPU_ReadData()
+    timer = time.time()
+    while ((time.time() - timer) < 10):
+        print(mpu.get_all_data())

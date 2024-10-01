@@ -15,7 +15,7 @@ from codetiming import Timer
 from multiprocessing import Lock
 
 class Wheel_Manager(object):
-	def __init__(self, motor_pin, pwm_pin):
+	def __init__(self, motor_pin, pwm_pin, bus_address=0x40):
 		self.lock = Lock()
 
 		self.motor_pin = motor_pin
@@ -38,7 +38,7 @@ class Wheel_Manager(object):
 		- a speed of 0 does not stop the motors, as it'd cause delay
 			when starting them again
 	'''
-	@Timer(name="Set Speed", text="Speed: {milliseconds:.6f}ms")
+	# @Timer(name="Set Speed", text="Speed: {milliseconds:.6f}ms")
 	def set_speed(self, speed):
 		with self.lock:
 			speed = max(-100, min(100, speed))

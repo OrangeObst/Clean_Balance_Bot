@@ -1,5 +1,3 @@
-import board
-import adafruit_mpu6050
 import math
 import time
 import numpy as np
@@ -77,6 +75,7 @@ class Speed_Calculator(object):
         starting_time = time.perf_counter()
         dt = starting_time - self.last_time
         self.last_time = starting_time
+        print(dt)
 
         accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z = self.mpu.MPU_ReadData()
 

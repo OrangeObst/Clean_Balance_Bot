@@ -276,7 +276,7 @@ class MyMPU6050:
                 self.GYRO_SCALE = 16.4
             case _:
                 pass
-        print(f'Gyro scale: {self.GYRO_SCALE}')
+        # print(f'Gyro scale: {self.GYRO_SCALE}')
         self.set_register(_MPU6050_GYRO_CONFIG, value)
 
     def get_gyro_config(self):
@@ -299,7 +299,7 @@ class MyMPU6050:
                 self.ACCEL_SCALE = 2048
             case _:
                 pass
-        print(f'Accel scale: {self.ACCEL_SCALE}')
+        # print(f'Accel scale: {self.ACCEL_SCALE}')
         self.set_register(_MPU6050_ACCEL_CONFIG, value)
 
     def get_accel_config(self):

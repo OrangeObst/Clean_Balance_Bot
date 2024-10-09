@@ -60,7 +60,7 @@ class Speed_Calculator(object):
         accel_readings = np.array([self.mpu.MPU_ReadData() for _ in range(10)])
         accel_avg = np.mean(accel_readings, axis=0)
         initial_pitch = math.degrees(math.atan2(-accel_avg[0], math.sqrt(accel_avg[1]**2 + accel_avg[2]**2)))
-        initial_pitch -= self.pitch_offset
+        initial_pitch -= self.balance_point
 
         self.previous_pitch = initial_pitch
 
@@ -75,7 +75,7 @@ class Speed_Calculator(object):
         starting_time = time.perf_counter()
         dt = starting_time - self.last_time
         self.last_time = starting_time
-        print(dt)
+        # print(dt)
 
         accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z = self.mpu.MPU_ReadData()
 
@@ -86,7 +86,7 @@ class Speed_Calculator(object):
 
         # Calculate pitch from accelerometer and gyroscope
         pitch_from_acceleration = math.degrees(math.atan2(-accel_x, math.sqrt(accel_y**2 + accel_z**2)))
-        pitch_from_acceleration -= self.pitch_offset
+        pitch_from_acceleration -= self.balance_point
 
         pitch_gyro_integration = self.previous_pitch + gyro_y * dt
         # print(f'Pitch from acc: {pitch_from_acceleration}, Pitch from gyro: {pitch_gyro_integration}')
@@ -95,7 +95,7 @@ class Speed_Calculator(object):
         # Apply complementary filter
         pitch = self.alpha * pitch_gyro_integration + (1 - self.alpha) * pitch_from_acceleration
         # print(f'before: {pitch}')
-        # pitch -= self.pitch_offset
+        # pitch -= self.balance_point
 
         self.imu_data.append(pitch)
         self.previous_pitch = pitch

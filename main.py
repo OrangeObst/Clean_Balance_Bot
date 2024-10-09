@@ -127,7 +127,7 @@ def plot_all_in_one(bm : balance_manager):
 @Timer(name="Calc Loop", text="Calc loop: {:.6f}s")
 def process_calculation(bm : balance_manager, conn_right=None, conn_left=None):
 	timer = time.time()
-	while((time.time() - timer) < 5):
+	while((time.time() - timer) < 15):
 		loop_time = time.time() + 0.01
 
 		speed_value = bm.control_loop()
@@ -168,7 +168,8 @@ def motor_control(wm : wheel_manager, conn):
 '''
 if __name__ == "__main__":
 	# (P, I, D, target_angle, min_out, max_out, balance_point) 0.83
-	bm = balance_manager.Speed_Calculator(27, 0.4, 1.5, -100, 100, -1.15)
+	# TODO: Fix issue with balance point / pitch offset / setpoint .. 
+	bm = balance_manager.Speed_Calculator(23, 0.4, 0.9, -100, 100, -0.72)
 
 	use_wheels = False
 	if use_wheels:
@@ -202,3 +203,4 @@ if __name__ == "__main__":
 	stackplot_pid_values(bm)
 	plot_angle_speed(bm)
 	# plot_all_in_one(bm)
+

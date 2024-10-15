@@ -20,20 +20,23 @@ class LowPassFilter:
 
 class Speed_Calculator(object):
     # 			(		P, I, D,  min_out, 		max_out, 	 	balance_point)
-    def __init__(self, kp, ki, kd, min_out=-100, max_out=100, balance_point=0):
+    def __init__(self, balance_point, desired_speed): # self, kp, ki, kd, min_out=-100, max_out=100, balance_point=0
         self.last_time = time.perf_counter()
 
         '''
         -------------------- PID init --------------------
         '''
         self.balance_point = balance_point
-        self.pid = PID_Controller(kp, ki, kd, min_out, max_out)
+        self.desired_speed = desired_speed
 
-        manager = Manager()
-        self.pid_data = manager.list()
-        self.pterms = manager.list()
-        self.iterms = manager.list()
-        self.dterms = manager.list()
+        # Outer loop speed_pid takes desired speed and outputs desired angle
+        # self.speed_pid = PID_Controller(23, 0.4, 0.9, -100, 100, self.desired_speed) # 23, 0.4, 0.9, -100, 100, -2.50
+
+        # Inner loop angle_pid takes desired angle and outputs the motor speed
+            # actually angle_pid, but currently speed_pid for convenience
+        self.speed_pid = PID_Controller(23, 0.4, 0.9, self.balance_point)
+        self.min_speed = -100
+        self.max_speed = 100
 
         '''
         -------------------- IMU init --------------------
@@ -51,20 +54,27 @@ class Speed_Calculator(object):
         self.lpf_y = LowPassFilter(lpf_alpha)
         self.lpf_z = LowPassFilter(lpf_alpha)
         
-        self.imu_data = manager.list()
-        
         self.alpha = 0.96		# For complementary filter
-        self.pitch_offset = -1.53
+        
+        '''
+        -------------------- Extras --------------------
+        '''
+        manager = Manager()
+        self.speed_pid_data = manager.list()
+        self.pterms = manager.list()
+        self.iterms = manager.list()
+        self.dterms = manager.list()
+
+        self.imu_data = manager.list()
 
         # Set initial values
         accel_readings = np.array([self.mpu.MPU_ReadData() for _ in range(10)])
         accel_avg = np.mean(accel_readings, axis=0)
         initial_pitch = math.degrees(math.atan2(-accel_avg[0], math.sqrt(accel_avg[1]**2 + accel_avg[2]**2)))
-        initial_pitch -= self.balance_point
 
         self.previous_pitch = initial_pitch
 
-        self.pid.update(self.balance_point, self.previous_pitch, 0.001)
+        self.speed_pid.update(self.previous_pitch, 0.001)
 
 
     # @Timer(name="Control Loop", text="Control loop: {milliseconds:.6f}ms")
@@ -86,16 +96,13 @@ class Speed_Calculator(object):
 
         # Calculate pitch from accelerometer and gyroscope
         pitch_from_acceleration = math.degrees(math.atan2(-accel_x, math.sqrt(accel_y**2 + accel_z**2)))
-        pitch_from_acceleration -= self.balance_point
 
         pitch_gyro_integration = self.previous_pitch + gyro_y * dt
         # print(f'Pitch from acc: {pitch_from_acceleration}, Pitch from gyro: {pitch_gyro_integration}')
-        # TODO: Why is pitch_acc > pitch_gyro
         
         # Apply complementary filter
         pitch = self.alpha * pitch_gyro_integration + (1 - self.alpha) * pitch_from_acceleration
-        # print(f'before: {pitch}')
-        # pitch -= self.balance_point
+
 
         self.imu_data.append(pitch)
         self.previous_pitch = pitch
@@ -103,8 +110,10 @@ class Speed_Calculator(object):
         '''
         --------------- Update PID controls ---------------
         '''
-        speed, pterm, iterm, dterm = self.pid.update(self.balance_point, pitch, dt)
-        self.pid_data.append(speed)
+        speed, pterm, iterm, dterm = self.speed_pid.update(pitch, dt)
+        speed = max(self.min_speed, min(self.max_speed, speed))
+
+        self.speed_pid_data.append(speed)
         self.pterms.append(pterm)
         self.iterms.append(iterm)
         self.dterms.append(dterm)

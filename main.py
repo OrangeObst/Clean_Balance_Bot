@@ -79,7 +79,7 @@ def plot_angle_speed(bm : balance_manager):
 	left_ax.axvline(x=time_values[low_point_index], color='m', linestyle='--', label=f'Low point at {low_point}°')
 
 	left_ax.set_xlim(0, 10)
-	left_ax.set_ylim(-5, 5)
+	left_ax.set_ylim(-8, 3)
 	right_ax.set_ylim(-110, 110)
 
 	left_ax.set_xlabel('Time (s)')
@@ -127,7 +127,7 @@ def plot_all_in_one(bm : balance_manager):
 @Timer(name="Calc Loop", text="Calc loop: {:.6f}s")
 def process_calculation(bm : balance_manager, conn_right=None, conn_left=None):
 	timer = time.time()
-	while((time.time() - timer) < 5):
+	while((time.time() - timer) < 20):
 		loop_time = time.time() + 0.01
 
 		speed_value = bm.control_loop()
@@ -167,9 +167,8 @@ def motor_control(wm : wheel_manager, conn):
 	PWM_B = 5
 '''
 if __name__ == "__main__":
-	# (P, I, D, target_angle, min_out, max_out, balance_point) 0.83
-	# TODO: Fix issue with balance point / pitch offset / setpoint .. 
-	bm = balance_manager.Speed_Calculator(-2.76, 0.0) # 23, 0.4, 0.9, -100, 100, -2.50
+	# 							balance_point / desired_speed
+	bm = balance_manager.Speed_Calculator(-2.76, 0.0)
 
 	use_wheels = False
 	if use_wheels:

@@ -23,7 +23,7 @@ class PID_Controller(object):
 
         output = pterm + iterm + dterm
 
-        print(f'Error: {error:f} = {self.setpoint} - {measured_value:f} balance_point - current pitch')
+        # print(f'Error: {error:f} = {self.setpoint} - {measured_value:f} balance_point - current pitch')
 
         self.previous_error = error
 

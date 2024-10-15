@@ -38,7 +38,7 @@ class Wheel_Manager(object):
 		- a speed of 0 does not stop the motors, as it'd cause delay
 			when starting them again
 	'''
-	@Timer(name="Set Speed", text="Speed: {milliseconds:.6f}ms")
+	# @Timer(name="Set Speed", text="Speed: {milliseconds:.6f}ms")
 	def set_speed(self, speed):
 		with self.lock:
 			speed = max(-100, min(100, speed))

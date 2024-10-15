@@ -46,13 +46,13 @@ class MyMPU6050:
         self.bus = i2c_bus
         self.address = address
 
-        self.AX_OFFSET = 0.015068350714199475
-        self.AY_OFFSET = 0.05349303127719331
-        self.AZ_OFFSET = 1.1235789666544356
+        self.AX_OFFSET = 0.0
+        self.AY_OFFSET = 0.0
+        self.AZ_OFFSET = 0.0
 
-        self.GX_OFFSET = -0.024701844112223207
-        self.GY_OFFSET = -0.0028664954374765326
-        self.GZ_OFFSET = 0.013756262972435979
+        self.GX_OFFSET = 0.0
+        self.GY_OFFSET = 0.0
+        self.GZ_OFFSET = 0.0
 
         self.GYRO_DRIFT_X = -0.0001191070
         self.GYRO_DRIFT_Y = -0.0000127492
@@ -318,11 +318,11 @@ class MyMPU6050:
         return self.AX_OFFSET, self.AY_OFFSET, self.AZ_OFFSET
 
     def set_gyro_offset(self, gx_offset=None, gy_offset=None, gz_offset=None):
-        if ax_offset is not None:
+        if gx_offset is not None:
             self.GX_OFFSET = gx_offset
-        if ay_offset is not None:
+        if gy_offset is not None:
             self.GY_OFFSET = gy_offset
-        if ay_offset is not None:
+        if gy_offset is not None:
             self.GZ_OFFSET = gz_offset
 
     def get_gyro_offset(self):
@@ -349,9 +349,9 @@ if __name__ == "__main__":
     mpu.set_dlpf_cfg(2)
     mpu.set_smplrt_div(4)
     print("Calibrating sensor, do not move the system")
-    # mpu.calibrate_sensor()
+    mpu.calibrate_sensor()
     # mpu.calculate_gyro_drift()
     # print(mpu.GYRO_DRIFT_X, mpu.GYRO_DRIFT_Y, mpu.GYRO_DRIFT_Z)
-    timer = time.time()
-    while ((time.time() - timer) < 10):
-        print(mpu.get_all_data())
+    # timer = time.time()
+    # while ((time.time() - timer) < 10):
+    #     print(mpu.get_all_data())

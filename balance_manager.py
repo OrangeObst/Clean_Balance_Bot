@@ -34,7 +34,7 @@ class Speed_Calculator(object):
 
         # Inner loop angle_pid takes desired angle and outputs the motor speed
             # actually angle_pid, but currently speed_pid for convenience
-        self.speed_pid = PID_Controller(23, 0.4, 0.9, self.balance_point)
+        self.speed_pid = PID_Controller(28, 0.4, 0.7, self.balance_point) # 35, 0.4, 0.7
         self.min_speed = -100
         self.max_speed = 100
 
@@ -48,6 +48,12 @@ class Speed_Calculator(object):
         self.mpu.set_dlpf_cfg(2)
         self.mpu.set_smplrt_div(4)
 
+        self.mpu.set_accel_offset(0.031837708, 0.024646467, 1.064992507)
+        self.mpu.set_gyro_offset(-0.024843416, -0.002446569, 0.004664117)
+        '''
+        OFFSET AX 0.03183770817630166, AY 0.024646467493363834, AZ 1.064992507951752
+        OFFSET GX -0.024843416633825305, GY -0.002446569556977695, GZ 0.004664117503684159
+        '''
         # Low pass filter
         lpf_alpha = 0.1
         self.lpf_x = LowPassFilter(lpf_alpha)
@@ -102,7 +108,7 @@ class Speed_Calculator(object):
         
         # Apply complementary filter
         pitch = self.alpha * pitch_gyro_integration + (1 - self.alpha) * pitch_from_acceleration
-
+        print(f'{pitch:.3f}')
 
         self.imu_data.append(pitch)
         self.previous_pitch = pitch

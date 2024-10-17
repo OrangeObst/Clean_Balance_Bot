@@ -7,6 +7,7 @@ import json
 import time
 import sys
 
+# MPU6050 setup
 bus = SMBus(1)
 mpu = MyMPU6050(bus)
 

@@ -127,7 +127,7 @@ def plot_all_in_one(bm : balance_manager):
 @Timer(name="Calc Loop", text="Calc loop: {:.6f}s")
 def process_calculation(bm : balance_manager, conn_right=None, conn_left=None):
 	timer = time.time()
-	while((time.time() - timer) < 20):
+	while((time.time() - timer) < 15 ):
 		loop_time = time.time() + 0.01
 
 		speed_value = bm.control_loop()
